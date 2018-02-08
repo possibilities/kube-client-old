@@ -10,7 +10,7 @@
     "url": "https://github.com/possibilities/kube-client/issues"
   },
   "homepage": "https://github.com/possibilities/kube-client",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "scripts": {
     "dev": "ava --verbose --serial --watch",
     "test": "ava --verbose --serial",
