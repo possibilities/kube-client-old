@@ -5,7 +5,7 @@
 Configure
 
 ```js
-const kubernetes = require('kapi')
+const kubernetes = require('kube-api')
 const kubernetes = await kubernetesApi({ baseURL: 'http://127.0.0.1:8001' })
 ```
 

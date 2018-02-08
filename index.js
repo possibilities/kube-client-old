@@ -13,7 +13,7 @@ const configureDebug = require('debug')
 const JSONStream = require('JSONStream')
 const eventStream = require('event-stream')
 
-const debug = configureDebug('kapi:client')
+const debug = configureDebug('kube-api:client')
 
 const oneDaySeconds = 60 * 60 * 24
 const timeoutSeconds = oneDaySeconds
