@@ -5,7 +5,7 @@ const { address: getIp } = require('ip')
 
 const startProxy = async () => {
   const ip = getIp()
-  const port = await findAPortNotInUse(8001, 45000, ip)
+  const port = await findAPortNotInUse(1024, 45000, ip)
   const command = `kubectl proxy --port ${port} --accept-hosts .* --address ${ip}`
   const [cmd, ...args] = command.split(' ')
   const proxying = spawn(cmd, args)
