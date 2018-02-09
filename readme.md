@@ -122,10 +122,10 @@ Configure resource aliases
 ```js
 const kubernetes = await kubernetesApi({
   baseUrl: 'http://127.0.0.1:8001',
-  aliases: { mapz: 'api.v1.configmaps' }
+  aliases: { configmaps: 'api.v1.configmaps' }
 })
 
-await kubernetes.mapz.create({
+await kubernetes.configmaps.create({
   metadata: { name: 'test-config-3', labels: { foo: 'bar' } },
   data: { foo: 'bar1' }
 })
