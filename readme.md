@@ -5,8 +5,8 @@
 Configure
 
 ```js
-const kubernetes = require('kube-api')
-const kubernetes = await kubernetesApi({ baseURL: 'http://127.0.0.1:8001' })
+const kubernetes = require('kube-client')
+const kubernetes = await kubernetesApi({ baseUrl: 'http://127.0.0.1:8001' })
 ```
 
 Create
@@ -104,7 +104,7 @@ const customResources = [{
 
 const kubernetes = await kubernetesApi({
   customResources,
-  baseURL: 'http://127.0.0.1:8001'
+  baseUrl: 'http://127.0.0.1:8001'
 })
 
 await apis.foobar.com.v1.foobars.create({
@@ -119,7 +119,7 @@ Configure resource aliases
 
 ```js
 const kubernetes = await kubernetesApi({
-  baseURL: 'http://127.0.0.1:8001',
+  baseUrl: 'http://127.0.0.1:8001',
   aliases: { mapz: 'api.v1.configmaps' }
 })
 

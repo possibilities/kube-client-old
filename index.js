@@ -13,7 +13,7 @@ const configureDebug = require('debug')
 const JSONStream = require('JSONStream')
 const eventStream = require('event-stream')
 
-const debug = configureDebug('kube-api:client')
+const debug = configureDebug('kube-client')
 
 const oneDaySeconds = 60 * 60 * 24
 const timeoutSeconds = oneDaySeconds
@@ -35,11 +35,11 @@ const configureResourceClient = (globalConfig = {}) => {
   const resourceClient = (apiPath = '/', resourceConfig = {}) => {
     debug('invoking resource client %s %O', apiPath, resourceConfig)
 
-    const { baseURL, ...combinedConfig } =
+    const { baseUrl, ...combinedConfig } =
       { ...globalConfig, ...resourceConfig }
 
     const cleanApiPath = apiPath.replace(/^\//, '')
-    const path = `${baseURL}/${cleanApiPath}`
+    const path = `${baseUrl}/${cleanApiPath}`
     const buildQuery = qs => ({ ...combinedConfig.qs, ...qs })
 
     return {

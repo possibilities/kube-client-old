@@ -44,7 +44,7 @@ const startProxy = async () => {
         resolve({
           proxying,
           config: {
-            baseURL: `http://${ip}:${port}`
+            baseUrl: `http://${ip}:${port}`
           }
         })
       }
