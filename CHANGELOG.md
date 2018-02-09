@@ -1,3 +1,10 @@
+### 0.3.2 (crafted 02/08/18)
+
+Changes:
+
+  * (Mike Bannister) Add install to docs
+  * (Mike Bannister) Change doc naming
+
 ### 0.3.1 (crafted 02/08/18)
 
 Changes:
