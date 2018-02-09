@@ -1,3 +1,11 @@
+### 0.3.3 (crafted 02/08/18)
+
+Changes:
+
+  * (Mike Bannister) Delint
+  * (Mike Bannister) Implement cleaner disconnect for `startProxy`
+  * (Mike Bannister) Move helpers out of index
+
 ### 0.3.2 (crafted 02/08/18)
 
 Changes:
