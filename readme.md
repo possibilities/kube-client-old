@@ -18,8 +18,8 @@ yarn install kube-client
 ### Configure
 
 ```js
-const kubernetes = require('kube-client')
-const kubernetes = await kubernetesApi({ baseUrl: 'http://127.0.0.1:8001' })
+const kubernetesClient = require('kube-client')
+const kubernetes = await kubernetesClient({ baseUrl: 'http://127.0.0.1:8001' })
 ```
 
 ### Verbs
@@ -127,7 +127,7 @@ const customResources = [{
   }
 }]
 
-const kubernetes = await kubernetesApi({
+const kubernetes = await kubernetesClient({
   customResources,
   baseUrl: 'http://127.0.0.1:8001'
 })
@@ -145,7 +145,7 @@ await apis.foobar.com.v1.foobars.create({
 Configure client to expose useful aliases to resources
 
 ```js
-const kubernetes = await kubernetesApi({
+const kubernetes = await kubernetesClient({
   baseUrl: 'http://127.0.0.1:8001',
   aliases: { configmaps: 'api.v1.configmaps' }
 })
@@ -164,7 +164,7 @@ Start a `kubectl` proxy on a random port
 
 ```js
 const proxy = await startProxy()
-const kubernetes = await kubernetesApi(proxy.config)
+const kubernetes = await kubernetesClient(proxy.config)
 ```
 
 ### `findConfig`/`findConfigSync`
@@ -173,10 +173,10 @@ Find configuration to access Kubernetes API from inside a container
 
 ```
 const config = await findConfig()
-const kubernetes = await kubernetesApi(config)
+const kubernetes = await kubernetesClient(config)
 ```
 
 ```
 const config = findConfigSync()
-const kubernetes = await kubernetesApi(config)
+const kubernetes = await kubernetesClient(config)
 ```

@@ -1,7 +1,7 @@
 const last = require('lodash/last')
 const { spy } = require('sinon')
 const test = require('ava')
-const { kubernetesApi } = require('.')
+const kubernetesClient = require('.')
 const startProxy = require('./startProxy')
 const throwUnlessConflict = require('./throwUnlessConflict')
 
@@ -30,15 +30,15 @@ test.beforeEach(async t => {
   const namespace = 'test-foobar'
   proxy = await startProxy()
 
-  kubernetes = await kubernetesApi({ namespace, ...proxy.config })
+  kubernetes = await kubernetesClient({ namespace, ...proxy.config })
 
-  kubernetesWithCustomResources = await kubernetesApi({
+  kubernetesWithCustomResources = await kubernetesClient({
     namespace,
     customResources,
     ...proxy.config
   })
 
-  kubernetesWithAliases = await kubernetesApi({
+  kubernetesWithAliases = await kubernetesClient({
     namespace,
     aliases: { mapz: 'api.v1.configmaps' },
     ...proxy.config

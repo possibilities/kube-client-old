@@ -179,7 +179,7 @@ const configureResourceClient = (globalConfig = {}) => {
 // over all available resources of the api by returning an object with
 // preconfigured helpers for each available resource on the connected
 // kubernetes api.
-const kubernetesApi = async (config = {}) => {
+const kubernetesClient = async (config = {}) => {
   const {
     namespace = null,
     aliases = {},
@@ -274,4 +274,4 @@ const kubernetesApi = async (config = {}) => {
   return extend(resourceClient, apiResources, resourceAliases)
 }
 
-module.exports.kubernetesApi = kubernetesApi
+module.exports = kubernetesClient
