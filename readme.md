@@ -7,13 +7,13 @@ A Kubernetes API client for nodejs
 * Simple promise-based interface
 * Builds interface dynamically by inspecting connected Kubernetes API resources
 
-## Install
+## Usage
+
+### Install
 
 ```shell
 yarn install kube-client
 ```
-
-## Usage
 
 ### Configure
 
@@ -22,7 +22,7 @@ const kubernetesClient = require('kube-client')
 const kubernetes = await kubernetesClient({ baseUrl: 'http://127.0.0.1:8001' })
 ```
 
-### Verbs
+### Invoke
 
 #### Create
 
