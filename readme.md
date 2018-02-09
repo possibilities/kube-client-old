@@ -104,7 +104,7 @@ configmaps.on('deleted', configmap => console.info('deleted', configmap))
 configmaps.unwatch()
 ```
 
-### Options
+### Config options
 
 #### Custom resources
 
