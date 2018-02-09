@@ -281,21 +281,30 @@ test('patches', async t => {
   t.is(testMapRefetchedAgain.data.baz, 'buzz')
 })
 
-test.cb('watches the items in collection', t => {
+test.cb('watches collection', t => {
   kubernetes.api.v1.configmaps.watch({ timeoutSeconds: 1 })
     .then(configmaps => {
       const addedSpy = spy()
+      const deletedSpy = spy()
+      const modifiedSpy = spy()
       configmaps.on('added', addedSpy)
-      configmaps.on('reconnect', async () => {
+      configmaps.on('deleted', deletedSpy)
+      configmaps.on('modified', modifiedSpy)
+      configmaps.on('reconnect', () => {
         t.is(addedSpy.callCount, 2)
+        t.is(deletedSpy.callCount, 1)
+        t.is(modifiedSpy.callCount, 1)
         t.is(last(addedSpy.firstCall.args).data.foo, 'fuzzy1')
         t.is(last(addedSpy.secondCall.args).data.foo, 'fuzzy2')
-        configmaps.disconnect()
+        t.is(last(deletedSpy.firstCall.args).data.foo, 'fuzzy1')
+        t.is(last(modifiedSpy.firstCall.args).data.bar, 'dirty1')
+        configmaps.unwatch()
         t.end()
       })
 
       const name1 = `test-config-${Date.now()}`
-      return kubernetes.api.v1.configmaps.create({
+
+      kubernetes.api.v1.configmaps.create({
         metadata: { name: name1 },
         data: { foo: 'fuzzy1' }
       }).then(() => {
@@ -303,12 +312,19 @@ test.cb('watches the items in collection', t => {
         kubernetes.api.v1.configmaps.create({
           metadata: { name: name2 },
           data: { foo: 'fuzzy2' }
+        }).then(() => {
+          kubernetes.api.v1.configmaps.update(name1, {
+            metadata: { name: name1 },
+            data: { foo: 'fuzzy1', bar: 'dirty1' }
+          }).then(() => {
+            kubernetes.api.v1.configmaps.delete(name1)
+          })
         })
       })
     })
 })
 
-test.cb('watches a single item', t => {
+test.cb('watches entity', t => {
   const name1 = `test-config-1-${Date.now()}`
   kubernetes.api.v1.configmaps.create({
     metadata: { name: name1 },
@@ -320,10 +336,12 @@ test.cb('watches a single item', t => {
         const deletedSpy = spy()
         configmaps.on('modified', modifiedSpy)
         configmaps.on('deleted', deletedSpy)
-        configmaps.on('reconnect', async () => {
+        configmaps.on('reconnect', () => {
           t.is(modifiedSpy.callCount, 1)
           t.is(deletedSpy.callCount, 1)
-          configmaps.disconnect()
+          t.is(last(modifiedSpy.firstCall.args).data.bar, 'dirty1')
+          t.is(last(deletedSpy.firstCall.args).data.foo, 'fuzzy1')
+          configmaps.unwatch()
           t.end()
         })
         kubernetes.api.v1.configmaps.update(name1, {

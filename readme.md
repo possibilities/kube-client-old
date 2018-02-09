@@ -72,6 +72,7 @@ const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
 configmaps.on('added', configmap => console.info('added', configmap))
 configmaps.on('modified', configmap => console.info('modified', configmap))
 configmaps.on('deleted', configmap => console.info('deleted', configmap))
+configmaps.unwatch()
 ```
 
 Watching a list
@@ -81,6 +82,7 @@ const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
 configmaps.on('added', configmap => console.info('added', configmap))
 configmaps.on('modified', configmap => console.info('modified', configmap))
 configmaps.on('deleted', configmap => console.info('deleted', configmap))
+configmaps.unwatch()
 ```
 
 Configuring custom resource definitions

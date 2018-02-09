@@ -160,7 +160,7 @@ const configureResourceClient = (globalConfig = {}) => {
 
         reconnector.on('reconnect', () => vent.emit('reconnect'))
 
-        vent.disconnect = () => {
+        vent.unwatch = () => {
           vent.removeAllListeners()
           reconnector.disconnect()
         }
