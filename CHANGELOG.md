@@ -1,3 +1,10 @@
+### 0.3.7 (crafted 02/09/18)
+
+Changes:
+
+  * (Mike Bannister) Improve readme
+  * (Mike Bannister) CI (#1)
+
 ### 0.3.6 (crafted 02/08/18)
 
 Changes:
