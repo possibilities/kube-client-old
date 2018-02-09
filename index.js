@@ -20,9 +20,7 @@ const oneDaySeconds = 60 * 60 * 24
 const timeoutSeconds = oneDaySeconds
 
 const request = (...args) => {
-  const req = promisify(
-    requestWithCallback
-    .defaults({ json: true }))
+  const req = promisify(requestWithCallback.defaults({ json: true }))
   return req(...args).then(({ body }) => body)
 }
 
