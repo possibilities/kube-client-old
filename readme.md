@@ -136,3 +136,16 @@ await kubernetes.configmaps.create({
   data: { foo: 'bar1' }
 })
 ```
+
+## Helpers
+
+### `startProxy`
+
+Start a `kubectl` proxy on a random port
+
+```
+const proxy = await startProxy()
+const kubernetes = await kubernetesApi(proxy.config)
+await kubernetes.api.v1.configmaps.get(name)
+proxy.disconnect()
+```

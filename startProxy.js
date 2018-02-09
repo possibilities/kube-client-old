@@ -17,10 +17,11 @@ const startProxy = async () => {
       output = `${output}${data.toString()}`
       if (output.includes(`Starting to serve on ${ip}:${port}`)) {
         resolve({
-          proxying,
-          config: {
-            baseUrl: `http://${ip}:${port}`
-          }
+          disconnect: () => {
+            proxying.catch(e => {})
+            proxying.childProcess.kill('SIGHUP')
+          },
+          config: {baseUrl: `http://${ip}:${port}` }
         })
       }
     })

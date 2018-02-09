@@ -55,7 +55,7 @@ test.beforeEach(async t => {
 test.afterEach(async t => {
   await kubernetes.api.v1.configmaps.deletecollection()
   await new Promise(resolve => setTimeout(resolve, 1000))
-  proxy.proxying.catch(e => e).childProcess.kill('SIGHUP')
+  proxy.disconnect()
 })
 
 test('gets', async t => {
