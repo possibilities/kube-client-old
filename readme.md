@@ -1,5 +1,12 @@
 # Kubernetes API client
 
+A Kubernetes API client for nodejs
+
+## Features
+
+* Simple promise-based interface
+* Builds interface dynamically by inspecting connected Kubernetes API resources
+
 ## Install
 
 ```shell
