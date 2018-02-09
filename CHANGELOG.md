@@ -1,3 +1,11 @@
+### 0.3.4 (crafted 02/08/18)
+
+Changes:
+
+  * (Mike Bannister) Readme
+  * (Mike Bannister) Add findConfig helpers
+  * (Mike Bannister) Add js directive to codeblock in readme
+
 ### 0.3.3 (crafted 02/08/18)
 
 Changes:
