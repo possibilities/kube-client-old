@@ -1,11 +1,9 @@
 const last = require('lodash/last')
 const { spy } = require('sinon')
 const test = require('ava')
-const { kubernetesApi, throwUnlessConflict } = require('.')
-const exitHook = require('exit-hook')
-const { spawn } = require('child-process-promise')
-const { findAPortNotInUse } = require('portscanner')
-const { address: getIp } = require('ip')
+const { kubernetesApi } = require('.')
+const startProxy = require('./startProxy')
+const throwUnlessConflict = require('./throwUnlessConflict')
 
 let proxy
 let kubernetes
@@ -27,30 +25,6 @@ const customResources = [{
     }
   }
 }]
-
-const startProxy = async () => {
-  const ip = getIp()
-  const port = await findAPortNotInUse(8001, 45000, ip)
-  const command = `kubectl proxy --port ${port} --accept-hosts .* --address ${ip}`
-  const [cmd, ...args] = command.split(' ')
-  const proxying = spawn(cmd, args)
-  exitHook(() => proxying.childProcess.kill('SIGHUP'))
-
-  return new Promise(resolve => {
-    let output = ''
-    proxying.childProcess.stdout.on('data', data => {
-      output = `${output}${data.toString()}`
-      if (output.includes(`Starting to serve on ${ip}:${port}`)) {
-        resolve({
-          proxying,
-          config: {
-            baseUrl: `http://${ip}:${port}`
-          }
-        })
-      }
-    })
-  })
-}
 
 test.beforeEach(async t => {
   const namespace = 'test-foobar'

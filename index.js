@@ -13,6 +13,7 @@ const configureDebug = require('debug')
 const JSONStream = require('JSONStream')
 const eventStream = require('event-stream')
 const omit = require('lodash/omit')
+const throwUnlessConflict = require('./throwUnlessConflict')
 
 const debug = configureDebug('kube-client')
 
@@ -24,11 +25,6 @@ const requestWithPromise =
 
 const request = (...args) =>
   requestWithPromise(...args).then(({ body }) => body)
-
-const throwUnlessConflict = error => {
-  const code = get(error, 'response.data.code')
-  if (code !== 409) throw error
-}
 
 // The client is split into two peices. The first is a resource client
 // that points to a single resource type, given any arbitrary api server
@@ -279,4 +275,3 @@ const kubernetesApi = async (config = {}) => {
 }
 
 module.exports.kubernetesApi = kubernetesApi
-module.exports.throwUnlessConflict = throwUnlessConflict
