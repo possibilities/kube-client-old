@@ -6,29 +6,35 @@ const isString = require('lodash/isString')
 const get = require('lodash/get')
 const set = require('lodash/set')
 const mapValues = require('lodash/mapValues')
-const fromPairs = require('lodash/fromPairs')
 const isObject = require('lodash/isObject')
 const { promisify } = require('util')
 const reconnectCore = require('reconnect-core')
 const configureDebug = require('debug')
 const JSONStream = require('JSONStream')
 const eventStream = require('event-stream')
+const omit = require('lodash/omit')
 
 const debug = configureDebug('kube-client')
 
 const oneDaySeconds = 60 * 60 * 24
 const timeoutSeconds = oneDaySeconds
 
-const request = (...args) => {
-  const req = promisify(requestWithCallback.defaults({ json: true }))
-  return req(...args).then(({ body }) => body)
-}
+const requestWithPromise =
+  promisify(requestWithCallback.defaults({ json: true }))
+
+const request = (...args) =>
+  requestWithPromise(...args).then(({ body }) => body)
 
 const throwUnlessConflict = error => {
   const code = get(error, 'response.data.code')
   if (code !== 409) throw error
 }
 
+// The client is split into two peices. The first is a resource client
+// that points to a single resource type, given any arbitrary api server
+// pathname, and can be used to invoke any available verb for that resource.
+// While it can be used directly it's more practical to invoke a provided
+// helper (see module export).
 const configureResourceClient = (globalConfig = {}) => {
   debug('configuring resource client with config %O', globalConfig)
   const resourceClient = (apiPath = '/', resourceConfig = {}) => {
@@ -173,6 +179,10 @@ const configureResourceClient = (globalConfig = {}) => {
   return resourceClient
 }
 
+// This is the second part of the API client. It provides a nice interface
+// over all available resources of the api by returning an object with
+// preconfigured helpers for each available resource on the connected
+// kubernetes api.
 const kubernetesApi = async (config = {}) => {
   const {
     namespace = null,
@@ -193,61 +203,79 @@ const kubernetesApi = async (config = {}) => {
       .catch(throwUnlessConflict)
   }))
 
-  // Fetch some meta infos from API
+  // Fetch meta infos from API
   const { paths } = await resourceClient().list()
-  const version = await resourceClient(`/version`).list()
 
   // Collect metadata from API
-  // TODO probably a better way to do this
-  const responses = await Promise.all(paths.map(async path => {
-    try {
-      const data = await resourceClient(path).list()
-      if (isObject(data)) {
-        return { data, path: path.replace(/^\//, '') }
+  const topLevelApiResources = await Promise.all(
+    paths
+      .filter(path => startsWith(path, '/api'))
+      .map(async path => {
+        const data = await resourceClient(path).list()
+        return { ...data, path }
       }
-    } catch (error) {}
-    return null
-  }))
+  ))
 
-  let api = { version }
+  // Here's a pipe line where we take in the output of the metadata served
+  // by the kubernetes api server. The output is the library's interface
+  // "shaped" dynamically based on the api "schema" described by the
+  // kubernetes api server
+  const apiResources = topLevelApiResources
+    .filter(resource => resource.kind === 'APIResourceList')
+    // Reduce down to resources with resource api paths included
+    .reduce((resources, apiResourceList) => {
+      apiResourceList.resources.forEach(resource => {
+        resources = [...resources, {
+          ...resource,
+          group: apiResourceList.path
+        }]
+      })
+      return resources
+    }, [])
+    // Reduce down to verbs with resource metadata included
+    .reduce((paths, resource) => {
+      resource.verbs.forEach(verb => {
+        paths = [...paths, { verb, ...omit(resource, 'verbs', 'singularName') }]
+      })
+      return paths
+    }, [])
+    // Collect full path to each resource verb and corresponding helper function
+    .map(resourceVerb => {
+      return {
+        // A dotted path used by lodash `set`, e.g. `api.v1.pods.list`
+        path: `${resourceVerb.group.slice(1)}.${resourceVerb.name}.${resourceVerb.verb}`,
+        helper: (...args) => {
+          let urlSegments = [resourceVerb.group]
 
-  responses
-    .filter(resource => get(resource, 'data.kind') === 'APIResourceList')
-    .forEach(resourceList => {
-      const resources = resourceList.data.resources.reduce((resources, resource) => ({
-        ...resources,
-        [resource.name]: fromPairs(
-          resource.verbs.map(verb => ([
-            verb,
-            (...args) => {
-              let path = [resourceList.path]
+          if (resourceVerb.verb === 'watch') {
+            urlSegments = [...urlSegments, 'watch']
+          }
 
-              if (verb === 'watch') {
-                path = [...path, 'watch']
-              }
+          if (namespace && resourceVerb.namespaced) {
+            urlSegments = [...urlSegments, 'namespaces', namespace]
+          }
 
-              if (namespace && resource.namespaced) {
-                path = [...path, 'namespaces', namespace]
-              }
+          const url = [...urlSegments, resourceVerb.name].join('/')
 
-              const url = [...path, resource.name].join('/')
-
-              return resourceClient(url)[verb](...args)
-            }
-          ]))
-        )
-      }), {})
-
-      const apiPath = resourceList.path.replace(/\//g, '.')
-      api = set(api, apiPath, resources)
+          return resourceClient(url)[resourceVerb.verb](...args)
+        }
+      }
     })
+    // Finally set each helper on at the appropriate key of a "api resource"
+    // object forming the API for the library
+    .reduce((resources, { path, helper }) => {
+      set(resources, path.replace(/\//g, '.'), helper)
+      return resources
+    }, {})
 
+  // Configure user defined aliases to resources
   const resourceAliases = mapValues(aliases, path => {
-    const apiPath = path.replace(/^\//, '').replace(/\//g, '.')
-    return get(api, apiPath)
+    const apiPath = path.replace(/\//g, '.')
+    return get(apiResources, apiPath)
   })
 
-  return extend(resourceClient, api, resourceAliases)
+  // Expose a raw resource client extended with all helpers
+  return extend(resourceClient, apiResources, resourceAliases)
 }
 
 module.exports.kubernetesApi = kubernetesApi
