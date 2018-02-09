@@ -2,6 +2,12 @@
 
 ## Usage
 
+Install
+
+```shell
+yarn install kube-client
+```
+
 Configure
 
 ```js
