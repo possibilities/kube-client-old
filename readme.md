@@ -1,4 +1,4 @@
-# Kubernetes API client [![CircleCI](https://img.shields.io/circleci/project/github/possibilities/kube-client.svg)]() [![npm](https://img.shields.io/npm/v/kube-client.svg)]()
+# Kubernetes API client [![CircleCI](https://img.shields.io/circleci/project/github/possibilities/kube-client.svg)](https://circleci.com/gh/possibilities/kube-client) [![npm](https://img.shields.io/npm/v/kube-client.svg)](https://www.npmjs.com/package/kube-client)
 
 A Kubernetes API client for nodejs
 
