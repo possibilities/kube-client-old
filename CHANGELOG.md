@@ -1,3 +1,9 @@
+### 0.3.5 (crafted 02/08/18)
+
+Changes:
+
+  * (Mike Bannister) Renaming and fixing exports
+
 ### 0.3.4 (crafted 02/08/18)
 
 Changes:
