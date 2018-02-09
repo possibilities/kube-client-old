@@ -143,7 +143,7 @@ await kubernetes.configmaps.create({
 
 Start a `kubectl` proxy on a random port
 
-```
+```js
 const proxy = await startProxy()
 const kubernetes = await kubernetesApi(proxy.config)
 await kubernetes.api.v1.configmaps.get(name)
