@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events')
 const requestWithCallback = require('request')
 const extend = require('lodash/extend')
+const startsWith = require('lodash/startsWith')
 const isString = require('lodash/isString')
 const get = require('lodash/get')
 const set = require('lodash/set')
@@ -35,16 +36,15 @@ const configureResourceClient = (globalConfig = {}) => {
   const resourceClient = (apiPath = '/', resourceConfig = {}) => {
     debug('invoking resource client %s %O', apiPath, resourceConfig)
 
-    const { baseUrl, ...combinedConfig } =
-      { ...globalConfig, ...resourceConfig }
+    const combinedConfig = { ...globalConfig, ...resourceConfig }
 
-    const cleanApiPath = apiPath.replace(/^\//, '')
-    const path = `${baseUrl}/${cleanApiPath}`
+    const path = startsWith(apiPath, '/') ? apiPath : `/${apiPath}`
     const buildQuery = qs => ({ ...combinedConfig.qs, ...qs })
 
     return {
       get: (name, qs) => {
         const payload = {
+          ...combinedConfig,
           url: `${path}/${name}`,
           method: 'get',
           qs: buildQuery(qs)
@@ -55,6 +55,7 @@ const configureResourceClient = (globalConfig = {}) => {
 
       list: qs => {
         const payload = {
+          ...combinedConfig,
           url: path,
           method: 'get',
           qs: buildQuery(qs)
@@ -65,6 +66,7 @@ const configureResourceClient = (globalConfig = {}) => {
 
       delete: (name, qs) => {
         const payload = {
+          ...combinedConfig,
           url: `${path}/${name}`,
           method: 'delete',
           qs: buildQuery(qs)
@@ -75,6 +77,7 @@ const configureResourceClient = (globalConfig = {}) => {
 
       deletecollection: qs => {
         const payload = {
+          ...combinedConfig,
           url: path,
           method: 'delete',
           qs: buildQuery(qs)
@@ -85,6 +88,7 @@ const configureResourceClient = (globalConfig = {}) => {
 
       create: (body, qs) => {
         const payload = {
+          ...combinedConfig,
           body,
           url: path,
           method: 'post',
@@ -96,6 +100,7 @@ const configureResourceClient = (globalConfig = {}) => {
 
       update: (name, body, qs) => {
         const payload = {
+          ...combinedConfig,
           body,
           url: `${path}/${name}`,
           method: 'put',
