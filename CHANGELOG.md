@@ -1,3 +1,10 @@
+### 0.3.6 (crafted 02/08/18)
+
+Changes:
+
+  * (Mike Bannister) Readme
+  * (Mike Bannister) Readme
+
 ### 0.3.5 (crafted 02/08/18)
 
 Changes:
