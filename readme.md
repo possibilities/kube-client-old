@@ -1,4 +1,4 @@
-# Kubernetes API client [![CircleCI](https://circleci.com/gh/possibilities/kube-client.svg?style=svg)](https://circleci.com/gh/possibilities/kube-client) [![npm](https://img.shields.io/npm/v/kube-client.svg)]()
+# Kubernetes API client [![CircleCI](https://img.shields.io/circleci/project/github/possibilities/kube-client.svg)]() [![npm](https://img.shields.io/npm/v/kube-client.svg)]()
 
 A Kubernetes API client for nodejs
 
@@ -7,56 +7,28 @@ A Kubernetes API client for nodejs
 * Simple promise-based interface
 * Builds interface dynamically by inspecting connected Kubernetes API resources
 
-## Usage
-
-### Install
+## Install
 
 ```shell
 yarn install kube-client
 ```
 
-### Configure
+## Configure
 
 ```js
 const kubernetesClient = require('kube-client')
 const kubernetes = await kubernetesClient({ baseUrl: 'http://127.0.0.1:8001' })
 ```
 
-### Invoke
+## Usage
 
-#### Create
-
-```js
-await kubernetes.api.v1.configmaps.create({
-  metadata: { name: 'test-config-1', labels: { foo: 'bar' } },
-  data: { foo: 'bar1' }
-})
-```
-
-#### Read
+#### `get`
 
 ```js
 const config = await kubernetes.api.v1.configmaps.get('test-config-1')
 ```
 
-#### Update
-
-```js
-await kubernetes.api.v1.configmaps.update({
-  metadata: { name: 'test-config-2', labels: { foo: 'bar' } },
-  data: { foo: 'bar2' }
-})
-```
-
-#### Patch
-
-```js
-await kubernetes.api.v1.configmaps.patch('test-config-2', {
-  data: { baz: 'buzz' }
-})
-```
-
-#### List
+#### `list`
 
 ```js
 await kubernetes.api.v1.configmaps.list()
@@ -65,15 +37,39 @@ await kubernetes.api.v1.configmaps.list(
 })
 ```
 
-#### Delete
+#### `create`
 
-##### Item
+```js
+await kubernetes.api.v1.configmaps.create({
+  metadata: { name: 'test-config-1', labels: { foo: 'bar' } },
+  data: { foo: 'bar1' }
+})
+```
+
+#### `update`
+
+```js
+await kubernetes.api.v1.configmaps.update({
+  metadata: { name: 'test-config-2', labels: { foo: 'bar' } },
+  data: { foo: 'bar2' }
+})
+```
+
+#### `patch`
+
+```js
+await kubernetes.api.v1.configmaps.patch('test-config-2', {
+  data: { baz: 'buzz' }
+})
+```
+
+#### `delete` item
 
 ```js
 await kubernetes.api.v1.configmaps.delete('test-config-2')
 ```
 
-##### Collection
+#### `delete` collection
 
 ```js
 await kubernetes.api.v1.configmaps.deletecollection()
@@ -82,9 +78,7 @@ await kubernetes.api.v1.configmaps.deletecollection({
 })
 ```
 
-#### Watch
-
-##### Item
+#### `watch` item
 
 ```js
 const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
@@ -94,7 +88,7 @@ configmaps.on('deleted', configmap => console.info('deleted', configmap))
 configmaps.unwatch()
 ```
 
-##### Collection
+#### `watch` collection
 
 ```js
 const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
@@ -171,12 +165,12 @@ const kubernetes = await kubernetesClient(proxy.config)
 
 Find configuration to access Kubernetes API from inside a container
 
-```
+```js
 const config = await findConfig()
 const kubernetes = await kubernetesClient(config)
 ```
 
-```
+```js
 const config = findConfigSync()
 const kubernetes = await kubernetesClient(config)
 ```
