@@ -1,21 +1,23 @@
 # Kubernetes API client
 
-## Usage
-
-Install
+## Install
 
 ```shell
 yarn install kube-client
 ```
 
-Configure
+## Usage
+
+### Configure
 
 ```js
 const kubernetes = require('kube-client')
 const kubernetes = await kubernetesApi({ baseUrl: 'http://127.0.0.1:8001' })
 ```
 
-Create
+### Verbs
+
+#### Create
 
 ```js
 await kubernetes.api.v1.configmaps.create({
@@ -24,13 +26,13 @@ await kubernetes.api.v1.configmaps.create({
 })
 ```
 
-Read
+#### Read
 
 ```js
 const config = await kubernetes.api.v1.configmaps.get('test-config-1')
 ```
 
-Update
+#### Update
 
 ```js
 await kubernetes.api.v1.configmaps.update({
@@ -39,7 +41,7 @@ await kubernetes.api.v1.configmaps.update({
 })
 ```
 
-Patch
+#### Patch
 
 ```js
 await kubernetes.api.v1.configmaps.patch('test-config-2', {
@@ -47,7 +49,7 @@ await kubernetes.api.v1.configmaps.patch('test-config-2', {
 })
 ```
 
-List
+#### List
 
 ```js
 await kubernetes.api.v1.configmaps.list()
@@ -56,13 +58,15 @@ await kubernetes.api.v1.configmaps.list(
 })
 ```
 
-Delete
+#### Delete
+
+##### Item
 
 ```js
 await kubernetes.api.v1.configmaps.delete('test-config-2')
 ```
 
-Delete collection
+##### Collection
 
 ```js
 await kubernetes.api.v1.configmaps.deletecollection()
@@ -71,7 +75,9 @@ await kubernetes.api.v1.configmaps.deletecollection({
 })
 ```
 
-Watching
+#### Watch
+
+##### Item
 
 ```js
 const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
@@ -81,7 +87,7 @@ configmaps.on('deleted', configmap => console.info('deleted', configmap))
 configmaps.unwatch()
 ```
 
-Watching a list
+##### Collection
 
 ```js
 const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
@@ -91,7 +97,11 @@ configmaps.on('deleted', configmap => console.info('deleted', configmap))
 configmaps.unwatch()
 ```
 
-Configuring custom resource definitions
+### Options
+
+#### Custom resources
+
+Configure client to register and utilize custom resources
 
 ```js
 const customResources = [{
@@ -123,7 +133,9 @@ await apis.foobar.com.v1.foobars.create({
 })
 ```
 
-Configure resource aliases
+#### Aliases
+
+Configure client to expose useful aliases to resources
 
 ```js
 const kubernetes = await kubernetesApi({
@@ -146,6 +158,18 @@ Start a `kubectl` proxy on a random port
 ```js
 const proxy = await startProxy()
 const kubernetes = await kubernetesApi(proxy.config)
-await kubernetes.api.v1.configmaps.get(name)
-proxy.disconnect()
+```
+
+### `findConfig`/`findConfigSync`
+
+Find configuration to access Kubernetes API from inside a container
+
+```
+const config = await findConfig()
+const kubernetes = await kubernetesApi(config)
+```
+
+```
+const config = findConfigSync()
+const kubernetes = await kubernetesApi(config)
 ```
