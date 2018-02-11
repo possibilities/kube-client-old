@@ -22,13 +22,13 @@ const kubernetes = await kubernetesClient({ baseUrl: 'http://127.0.0.1:8001' })
 
 ## Usage
 
-#### `get`
+#### `get(name)`
 
 ```js
 const config = await kubernetes.api.v1.configmaps.get('test-config-1')
 ```
 
-#### `list`
+#### `list(query = {})`
 
 ```js
 await kubernetes.api.v1.configmaps.list()
@@ -37,7 +37,7 @@ await kubernetes.api.v1.configmaps.list(
 })
 ```
 
-#### `create`
+#### `create(data = {}, query = {})`
 
 ```js
 await kubernetes.api.v1.configmaps.create({
@@ -46,7 +46,7 @@ await kubernetes.api.v1.configmaps.create({
 })
 ```
 
-#### `update`
+#### `update(name, data = {}, query = {})`
 
 ```js
 await kubernetes.api.v1.configmaps.update({
@@ -55,7 +55,7 @@ await kubernetes.api.v1.configmaps.update({
 })
 ```
 
-#### `patch`
+#### `patch(name, data = {}, query = {})`
 
 ```js
 await kubernetes.api.v1.configmaps.patch('test-config-2', {
@@ -63,13 +63,13 @@ await kubernetes.api.v1.configmaps.patch('test-config-2', {
 })
 ```
 
-#### `delete` item
+#### `delete(name, query = {})`
 
 ```js
 await kubernetes.api.v1.configmaps.delete('test-config-2')
 ```
 
-#### `delete` collection
+#### `deletecollection(query = {})`
 
 ```js
 await kubernetes.api.v1.configmaps.deletecollection()
@@ -78,7 +78,9 @@ await kubernetes.api.v1.configmaps.deletecollection({
 })
 ```
 
-#### `watch` item
+#### `watch(name, query = {})`
+
+Watch a single item
 
 ```js
 const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
@@ -88,7 +90,9 @@ configmaps.on('deleted', configmap => console.info('deleted', configmap))
 configmaps.unwatch()
 ```
 
-#### `watch` collection
+#### `watch(query = {})`
+
+Watch a collection
 
 ```js
 const configmaps = await kubernetes.api.v1.configmaps.watch('test-config-2')
@@ -98,7 +102,7 @@ configmaps.on('deleted', configmap => console.info('deleted', configmap))
 configmaps.unwatch()
 ```
 
-### Config options
+### Configuration
 
 #### `customResources`
 
