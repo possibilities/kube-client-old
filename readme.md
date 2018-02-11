@@ -100,7 +100,7 @@ configmaps.unwatch()
 
 ### Config options
 
-#### Custom resources
+#### `customResources`
 
 Configure client to register and utilize custom resources
 
@@ -134,7 +134,19 @@ await apis.foobar.com.v1.foobars.create({
 })
 ```
 
-#### Aliases
+#### `ensureNamespace`
+
+Create the requested namespace if it doesn't exist
+
+```js
+const kubernetes = await kubernetesClient({
+  namespace: 'foofbar',
+  ensureNamespace: true,
+  baseUrl: 'http://127.0.0.1:8001'
+})
+
+```
+#### `aliases`
 
 Configure client to expose useful aliases to resources
 
@@ -150,9 +162,9 @@ await kubernetes.configmaps.create({
 })
 ```
 
-## Helpers
+### Helpers
 
-### `startProxy`
+#### `startProxy`
 
 Start a `kubectl` proxy on a random port
 
@@ -161,7 +173,7 @@ const proxy = await startProxy()
 const kubernetes = await kubernetesClient(proxy.config)
 ```
 
-### `findConfig`/`findConfigSync`
+#### `findConfig`/`findConfigSync`
 
 Find configuration to access Kubernetes API from inside a container
 

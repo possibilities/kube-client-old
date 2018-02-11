@@ -3,12 +3,9 @@ const { spy } = require('sinon')
 const test = require('ava')
 const kubernetesClient = require('.')
 const startProxy = require('./startProxy')
-const throwUnlessConflict = require('./throwUnlessConflict')
 
 let proxy
 let kubernetes
-let kubernetesWithAliases
-let kubernetesWithCustomResources
 
 const customResources = [{
   metadata: {
@@ -30,23 +27,13 @@ test.beforeEach(async t => {
   const namespace = 'test-foobar'
   proxy = await startProxy()
 
-  kubernetes = await kubernetesClient({ namespace, ...proxy.config })
-
-  kubernetesWithCustomResources = await kubernetesClient({
+  kubernetes = await kubernetesClient({
     namespace,
     customResources,
-    ...proxy.config
-  })
-
-  kubernetesWithAliases = await kubernetesClient({
-    namespace,
+    ensureNamespace: true,
     aliases: { mapz: 'api.v1.configmaps' },
     ...proxy.config
   })
-
-  await kubernetes.api.v1.namespaces
-    .create({ metadata: { name: namespace } })
-    .catch(throwUnlessConflict)
 
   await kubernetes.api.v1.configmaps.deletecollection()
   await new Promise(resolve => setTimeout(resolve, 1000))
@@ -330,7 +317,7 @@ test.cb('watches entity', t => {
 
 test('loads custom resources', async t => {
   const name = `test-custom-${Date.now()}`
-  const { foobars } = kubernetesWithCustomResources.apis.foobar.com.v1
+  const { foobars } = kubernetes.apis.foobar.com.v1
 
   await foobars.create({
     apiVersion: 'foobar.com/v1',
@@ -346,12 +333,12 @@ test('loads custom resources', async t => {
 test('exposes aliases', async t => {
   const name = `test-config-${Date.now()}`
 
-  await kubernetesWithAliases.mapz.create({
+  await kubernetes.mapz.create({
     metadata: { name },
     data: { foo: 'bar' }
   })
 
-  const testMap = await kubernetesWithAliases.mapz.get(name)
+  const testMap = await kubernetes.mapz.get(name)
   t.is(testMap.data.foo, 'bar')
 })
 

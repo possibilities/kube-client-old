@@ -13,7 +13,6 @@ const configureDebug = require('debug')
 const JSONStream = require('JSONStream')
 const eventStream = require('event-stream')
 const omit = require('lodash/omit')
-const throwUnlessConflict = require('./throwUnlessConflict')
 
 const debug = configureDebug('kube-client')
 
@@ -25,6 +24,11 @@ const requestWithPromise =
 
 const request = (...args) =>
   requestWithPromise(...args).then(({ body }) => body)
+
+const throwUnlessConflict = error => {
+  const code = get(error, 'response.data.code')
+  if (code !== 409) throw error
+}
 
 // The client is split into two peices. The first is a resource client
 // that points to a single resource type, given any arbitrary api server
@@ -184,6 +188,7 @@ const kubernetesClient = async (config = {}) => {
     namespace = null,
     aliases = {},
     customResources = [],
+    ensureNamespace: shouldEnsureNamespace,
     ...requestConfig
   } = config
 
@@ -269,6 +274,12 @@ const kubernetesClient = async (config = {}) => {
     const apiPath = path.replace(/\//g, '.')
     return get(apiResources, apiPath)
   })
+
+  if (shouldEnsureNamespace) {
+    await apiResources.api.v1.namespaces
+      .create({ metadata: { name: namespace } })
+      .catch(throwUnlessConflict)
+  }
 
   // Expose a raw resource client extended with all helpers
   return extend(resourceClient, apiResources, resourceAliases)
