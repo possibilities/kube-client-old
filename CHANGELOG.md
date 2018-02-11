@@ -1,3 +1,10 @@
+### 0.3.8 (crafted 02/11/18)
+
+Changes:
+
+  * (Mike Bannister) Add `ensureNamespace` config option
+  * (Mike Bannister) Link badges
+
 ### 0.3.7 (crafted 02/09/18)
 
 Changes:
