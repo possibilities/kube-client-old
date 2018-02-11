@@ -1,3 +1,9 @@
+### 0.3.10 (crafted 02/11/18)
+
+Changes:
+
+  * (Mike Bannister) Use `patch` to implement update in `upsert`
+
 ### 0.3.9 (crafted 02/11/18)
 
 Changes:
