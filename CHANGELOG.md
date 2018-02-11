@@ -1,3 +1,11 @@
+### 0.3.9 (crafted 02/11/18)
+
+Changes:
+
+  * (Mike Bannister) Add `upsert` verb
+  * (Mike Bannister) Misc code cleanup
+  * (Mike Bannister) Show arguments in docs
+
 ### 0.3.8 (crafted 02/11/18)
 
 Changes:
