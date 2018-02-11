@@ -39,89 +39,87 @@ const configureResourceClient = (globalConfig = {}) => {
   debug('configuring resource client with config %O', globalConfig)
   const resourceClient = (apiPath = '/', resourceConfig = {}) => {
     debug('invoking resource client %s %O', apiPath, resourceConfig)
-
     const combinedConfig = { ...globalConfig, ...resourceConfig }
-
     const path = startsWith(apiPath, '/') ? apiPath : `/${apiPath}`
-    const buildQuery = qs => ({ ...combinedConfig.qs, ...qs })
+    const baseQuery = combinedConfig.qs || {}
 
     return {
-      get: (name, qs) => {
+      get: (name, qs = {}) => {
         const payload = {
           ...combinedConfig,
           url: `${path}/${name}`,
           method: 'get',
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `get` %O', payload)
         return request(payload)
       },
 
-      list: qs => {
+      list: (qs = {}) => {
         const payload = {
           ...combinedConfig,
           url: path,
           method: 'get',
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `list` %O', payload)
         return request(payload)
       },
 
-      delete: (name, qs) => {
+      delete: (name, qs = {}) => {
         const payload = {
           ...combinedConfig,
           url: `${path}/${name}`,
           method: 'delete',
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `delete` %O', payload)
         return request(payload)
       },
 
-      deletecollection: qs => {
+      deletecollection: (qs = {}) => {
         const payload = {
           ...combinedConfig,
           url: path,
           method: 'delete',
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `deletecollection` %O', payload)
         return request(payload)
       },
 
-      create: (body, qs) => {
+      create: (body, qs = {}) => {
         const payload = {
           ...combinedConfig,
           body,
           url: path,
           method: 'post',
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `create` %O', payload)
         return request(payload)
       },
 
-      update: (name, body, qs) => {
+      update: (name, body, qs = {}) => {
         const payload = {
           ...combinedConfig,
           body,
           url: `${path}/${name}`,
           method: 'put',
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `update` %O', payload)
         return request(payload)
       },
 
-      patch: (name, body, qs) => {
+      patch: (name, body, qs = {}) => {
         const payload = {
           ...combinedConfig,
           body,
           url: `${path}/${name}`,
           method: 'patch',
           headers: { 'content-type': 'application/merge-patch+json' },
-          qs: buildQuery(qs)
+          qs: { ...baseQuery, ...qs }
         }
         debug('invoking resource `patch` %O', payload)
         return request(payload)
@@ -129,15 +127,14 @@ const configureResourceClient = (globalConfig = {}) => {
 
       watch: async (...args) => {
         const url = isString(args[0]) ? `${path}/${args[0]}` : path
-        const qs = buildQuery(args.filter(isObject).pop() || {})
+        const watchQuery = args.filter(isObject).pop() || {}
+        const qs = { timeoutSeconds, ...baseQuery, ...watchQuery }
         const vent = new EventEmitter()
         let resourceVersion = qs.resourceVersion || 0
 
-        const reconnect = reconnectCore(config => requestWithCallback({
-          ...combinedConfig,
-          url,
-          method: 'get',
-          qs: { ...config.qs, ...qs, resourceVersion }
+        const reconnect = reconnectCore(requestConfig => requestWithCallback({
+          ...requestConfig,
+          qs: { ...requestConfig.qs, resourceVersion }
         }))
 
         const reconnector = reconnect({}, reconnectingStream => {
@@ -145,25 +142,21 @@ const configureResourceClient = (globalConfig = {}) => {
           reconnectingStream.pipe(JSONStream.parse())
             .pipe(eventStream.mapSync(data => {
               if (data.type !== 'ERROR') {
-                debug('emitting `%s` event for `%s`', data.type, data.object.metadata.name)
+                debug(
+                  'emitting `%s` event for `%s`',
+                  data.type,
+                  data.object.metadata.name
+                )
                 vent.emit(data.type.toLowerCase(), data.object)
               }
 
-              resourceVersion = data.type === 'ERROR' || data.type === 'DELETED'
-                ? 0
-                : data.object.metadata.resourceVersion
+              resourceVersion = get(data, 'object.metadata.resourceVersion', 0)
               debug('caching `resourceVersion` %s', resourceVersion)
             }))
           return reconnectingStream
         })
 
-        reconnector.connect({
-          ...combinedConfig,
-          url,
-          method: 'get',
-          qs: { timeoutSeconds, ...qs }
-        })
-
+        reconnector.connect({ ...combinedConfig, url, method: 'get', qs })
         reconnector.on('reconnect', () => vent.emit('reconnect'))
 
         vent.unwatch = () => {
@@ -226,25 +219,34 @@ const kubernetesClient = async (config = {}) => {
     // Reduce down to resources with resource api paths included
     .reduce((resources, apiResourceList) => {
       apiResourceList.resources.forEach(resource => {
-        resources = [...resources, {
-          ...resource,
-          group: apiResourceList.path
-        }]
+        resources = [
+          ...resources,
+          { ...resource, group: apiResourceList.path }
+        ]
       })
       return resources
     }, [])
     // Reduce down to verbs with resource metadata included
     .reduce((paths, resource) => {
       resource.verbs.forEach(verb => {
-        paths = [...paths, { verb, ...omit(resource, 'verbs', 'singularName') }]
+        paths = [
+          ...paths,
+          { verb, ...omit(resource, 'verbs', 'singularName') }
+        ]
       })
       return paths
     }, [])
-    // Collect full path to each resource verb and corresponding helper function
+    // Collect full path to each resource verb and corresponding
+    // helper function
     .map(resourceVerb => {
+      // A dotted path used by lodash `set`, e.g. `api.v1.pods.list`
+      const path = [
+        resourceVerb.group.slice(1), // Trim prefixed slash
+        resourceVerb.name,
+        resourceVerb.verb
+      ].join('.')
       return {
-        // A dotted path used by lodash `set`, e.g. `api.v1.pods.list`
-        path: `${resourceVerb.group.slice(1)}.${resourceVerb.name}.${resourceVerb.verb}`,
+        path,
         helper: (...args) => {
           let urlSegments = [resourceVerb.group]
 
