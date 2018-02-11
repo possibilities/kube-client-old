@@ -124,7 +124,7 @@ const configureResourceClient = (globalConfig = {}) => {
           return await api.create(...upsertArgs)
         } catch (error) {
           if (error.code === 409) {
-            return api.update(name, ...upsertArgs)
+            return api.patch(name, ...upsertArgs)
           }
           throw error
         }
