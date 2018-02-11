@@ -55,6 +55,19 @@ await kubernetes.api.v1.configmaps.update({
 })
 ```
 
+#### `upsert(name, data = {}, query = {})`
+
+```js
+await kubernetes.api.v1.configmaps.upsert({
+  metadata: { name: 'test-config-2', labels: { foo: 'bar' } },
+  data: { foo: 'bar2' }
+})
+await kubernetes.api.v1.configmaps.upsert({
+  metadata: { name: 'test-config-2', labels: { foo: 'bar' } },
+  data: { foo: 'bar3' }
+})
+```
+
 #### `patch(name, data = {}, query = {})`
 
 ```js

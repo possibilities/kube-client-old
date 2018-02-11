@@ -23,11 +23,17 @@ const requestWithPromise =
   promisify(requestWithCallback.defaults({ json: true }))
 
 const request = (...args) =>
-  requestWithPromise(...args).then(({ body }) => body)
+  new Promise((resolve, reject) => {
+    requestWithPromise(...args).then(({ body }) => {
+      if (body.code && body.code >= 400) {
+        reject(body)
+      }
+      resolve(body)
+    })
+  })
 
 const throwUnlessConflict = error => {
-  const code = get(error, 'response.data.code')
-  if (code !== 409) throw error
+  if (error.code !== 409) throw error
 }
 
 // The client is split into two peices. The first is a resource client
@@ -43,7 +49,7 @@ const configureResourceClient = (globalConfig = {}) => {
     const path = startsWith(apiPath, '/') ? apiPath : `/${apiPath}`
     const baseQuery = combinedConfig.qs || {}
 
-    return {
+    const api = {
       get: (name, qs = {}) => {
         const payload = {
           ...combinedConfig,
@@ -112,6 +118,18 @@ const configureResourceClient = (globalConfig = {}) => {
         return request(payload)
       },
 
+      upsert: async (...args) => {
+        const [name, ...upsertArgs] = args
+        try {
+          return await api.create(...upsertArgs)
+        } catch (error) {
+          if (error.code === 409) {
+            return api.update(name, ...upsertArgs)
+          }
+          throw error
+        }
+      },
+
       patch: (name, body, qs = {}) => {
         const payload = {
           ...combinedConfig,
@@ -167,6 +185,8 @@ const configureResourceClient = (globalConfig = {}) => {
         return vent
       }
     }
+
+    return api
   }
 
   return resourceClient
@@ -228,7 +248,11 @@ const kubernetesClient = async (config = {}) => {
     }, [])
     // Reduce down to verbs with resource metadata included
     .reduce((paths, resource) => {
-      resource.verbs.forEach(verb => {
+      const verbs = resource.verbs.includes('update')
+        ? [...resource.verbs, 'upsert']
+        : resource.verbs
+
+      verbs.forEach(verb => {
         paths = [
           ...paths,
           { verb, ...omit(resource, 'verbs', 'singularName') }

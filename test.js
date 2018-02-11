@@ -217,6 +217,29 @@ test('updates', async t => {
   t.is(testMapRefetchedAgain.data.foo, 'bar2')
 })
 
+test('upserts', async t => {
+  const name = `test-config-${Date.now()}`
+
+  const testMap = await kubernetes.api.v1.configmaps.upsert(name, {
+    metadata: { name },
+    data: { foo: 'bar' }
+  })
+
+  const testMapRefetched = await kubernetes.api.v1.configmaps
+    .get(testMap.metadata.name)
+
+  t.is(testMapRefetched.data.foo, 'bar')
+
+  await kubernetes.api.v1.configmaps.upsert(name, {
+    metadata: { name },
+    data: { foo: 'bar2' }
+  })
+
+  const testMapRefetchedAgain =
+    await kubernetes.api.v1.configmaps.get(testMap.metadata.name)
+  t.is(testMapRefetchedAgain.data.foo, 'bar2')
+})
+
 test('patches', async t => {
   const name = `test-config-${Date.now()}`
 
