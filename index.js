@@ -12,6 +12,7 @@ const reconnectCore = require('reconnect-core')
 const configureDebug = require('debug')
 const JSONStream = require('JSONStream')
 const eventStream = require('event-stream')
+const includes = require('lodash/includes')
 const omit = require('lodash/omit')
 
 const debug = configureDebug('kube-client')
@@ -36,6 +37,35 @@ const throwUnlessConflict = error => {
   if (error.code !== 409) throw error
 }
 
+const buildUrl = (options = {}, namespace = null, name = null) => {
+  let url = options
+
+  if (isString(options)) {
+    return name ? `${options}/${name}` : options
+  }
+
+  let urlSegments = [options.group]
+
+  if (options.verb === 'watch') {
+    urlSegments = [...urlSegments, 'watch']
+  }
+
+  if (namespace && options.namespaced) {
+    urlSegments = [...urlSegments, 'namespaces', namespace]
+  }
+
+  if (includes(options.name, '/')) {
+    const [resourceName, subResourceName] = options.name.split('/')
+    url = [...urlSegments, resourceName, name, subResourceName].join('/')
+  } else {
+    url = name
+      ? [...urlSegments, options.name, name].join('/')
+      : [...urlSegments, options.name].join('/')
+  }
+
+  return url
+}
+
 // The client is split into two peices. The first is a resource client
 // that points to a single resource type, given any arbitrary api server
 // pathname, and can be used to invoke any available verb for that resource.
@@ -43,17 +73,18 @@ const throwUnlessConflict = error => {
 // helper (see module export).
 const configureResourceClient = (globalConfig = {}) => {
   debug('configuring resource client with config %O', globalConfig)
-  const resourceClient = (apiPath = '/', resourceConfig = {}) => {
-    debug('invoking resource client %s %O', apiPath, resourceConfig)
+  const resourceClient = (urlOrOptions, resourceConfig = {}) => {
+    debug('invoking resource client %O %O', urlOrOptions, resourceConfig)
+
     const combinedConfig = { ...globalConfig, ...resourceConfig }
-    const path = startsWith(apiPath, '/') ? apiPath : `/${apiPath}`
-    const baseQuery = combinedConfig.qs || {}
+    const { namespace, ...config } = combinedConfig
+    const baseQuery = config.qs || {}
 
     const api = {
       get: (name, qs = {}) => {
         const payload = {
-          ...combinedConfig,
-          url: `${path}/${name}`,
+          ...config,
+          url: buildUrl(urlOrOptions, namespace, name),
           method: 'get',
           qs: { ...baseQuery, ...qs }
         }
@@ -63,8 +94,8 @@ const configureResourceClient = (globalConfig = {}) => {
 
       list: (qs = {}) => {
         const payload = {
-          ...combinedConfig,
-          url: path,
+          ...config,
+          url: buildUrl(urlOrOptions, namespace),
           method: 'get',
           qs: { ...baseQuery, ...qs }
         }
@@ -74,8 +105,8 @@ const configureResourceClient = (globalConfig = {}) => {
 
       delete: (name, qs = {}) => {
         const payload = {
-          ...combinedConfig,
-          url: `${path}/${name}`,
+          ...config,
+          url: buildUrl(urlOrOptions, namespace, name),
           method: 'delete',
           qs: { ...baseQuery, ...qs }
         }
@@ -85,8 +116,8 @@ const configureResourceClient = (globalConfig = {}) => {
 
       deletecollection: (qs = {}) => {
         const payload = {
-          ...combinedConfig,
-          url: path,
+          ...config,
+          url: buildUrl(urlOrOptions, namespace),
           method: 'delete',
           qs: { ...baseQuery, ...qs }
         }
@@ -96,9 +127,9 @@ const configureResourceClient = (globalConfig = {}) => {
 
       create: (body, qs = {}) => {
         const payload = {
-          ...combinedConfig,
+          ...config,
           body,
-          url: path,
+          url: buildUrl(urlOrOptions, namespace),
           method: 'post',
           qs: { ...baseQuery, ...qs }
         }
@@ -108,9 +139,9 @@ const configureResourceClient = (globalConfig = {}) => {
 
       update: (name, body, qs = {}) => {
         const payload = {
-          ...combinedConfig,
+          ...config,
           body,
-          url: `${path}/${name}`,
+          url: buildUrl(urlOrOptions, namespace, name),
           method: 'put',
           qs: { ...baseQuery, ...qs }
         }
@@ -132,9 +163,9 @@ const configureResourceClient = (globalConfig = {}) => {
 
       patch: (name, body, qs = {}) => {
         const payload = {
-          ...combinedConfig,
+          ...config,
           body,
-          url: `${path}/${name}`,
+          url: buildUrl(urlOrOptions, namespace, name),
           method: 'patch',
           headers: { 'content-type': 'application/merge-patch+json' },
           qs: { ...baseQuery, ...qs }
@@ -144,7 +175,9 @@ const configureResourceClient = (globalConfig = {}) => {
       },
 
       watch: async (...args) => {
-        const url = isString(args[0]) ? `${path}/${args[0]}` : path
+        const nameOrNull = isString(args[0]) ? args[0] : null
+        const url = buildUrl(urlOrOptions, namespace, nameOrNull)
+
         const watchQuery = args.filter(isObject).pop() || {}
         const qs = { timeoutSeconds, ...baseQuery, ...watchQuery }
         const vent = new EventEmitter()
@@ -174,7 +207,7 @@ const configureResourceClient = (globalConfig = {}) => {
           return reconnectingStream
         })
 
-        reconnector.connect({ ...combinedConfig, url, method: 'get', qs })
+        reconnector.connect({ ...config, url, method: 'get', qs })
         reconnector.on('reconnect', () => vent.emit('reconnect'))
 
         vent.unwatch = () => {
@@ -192,6 +225,17 @@ const configureResourceClient = (globalConfig = {}) => {
   return resourceClient
 }
 
+// A dotted path used by lodash `set`, e.g. `api.v1.pods.list`
+const getResourcePath = resourceVerb =>
+  [
+    // Trim prefixed slash
+    resourceVerb.group.slice(1),
+    resourceVerb.name,
+    resourceVerb.verb
+  ]
+    .join('.')
+    .replace(/\//g, '.')
+
 // This is the second part of the API client. It provides a nice interface
 // over all available resources of the api by returning an object with
 // preconfigured helpers for each available resource on the connected
@@ -206,7 +250,7 @@ const kubernetesClient = async (config = {}) => {
   } = config
 
   // Prepare resource client with initial configuration
-  const resourceClient = configureResourceClient(requestConfig)
+  const resourceClient = configureResourceClient({ namespace, ...requestConfig })
 
   // Load custom resources
   await Promise.all(customResources.map(resource => {
@@ -247,51 +291,27 @@ const kubernetesClient = async (config = {}) => {
       return resources
     }, [])
     // Reduce down to verbs with resource metadata included
-    .reduce((paths, resource) => {
+    .reduce((resourceVerbs, resource) => {
       const verbs = resource.verbs.includes('update')
         ? [...resource.verbs, 'upsert']
         : resource.verbs
 
       verbs.forEach(verb => {
-        paths = [
-          ...paths,
+        resourceVerbs = [
+          ...resourceVerbs,
           { verb, ...omit(resource, 'verbs', 'singularName') }
         ]
       })
-      return paths
+      return resourceVerbs
     }, [])
-    // Collect full path to each resource verb and corresponding
-    // helper function
-    .map(resourceVerb => {
-      // A dotted path used by lodash `set`, e.g. `api.v1.pods.list`
-      const path = [
-        resourceVerb.group.slice(1), // Trim prefixed slash
-        resourceVerb.name,
-        resourceVerb.verb
-      ].join('.')
-      return {
-        path,
-        helper: (...args) => {
-          let urlSegments = [resourceVerb.group]
-
-          if (resourceVerb.verb === 'watch') {
-            urlSegments = [...urlSegments, 'watch']
-          }
-
-          if (namespace && resourceVerb.namespaced) {
-            urlSegments = [...urlSegments, 'namespaces', namespace]
-          }
-
-          const url = [...urlSegments, resourceVerb.name].join('/')
-
-          return resourceClient(url)[resourceVerb.verb](...args)
-        }
-      }
-    })
     // Finally set each helper on at the appropriate key of a "api resource"
     // object forming the API for the library
-    .reduce((resources, { path, helper }) => {
-      set(resources, path.replace(/\//g, '.'), helper)
+    .reduce((resources, resourceVerb) => {
+      set(
+        resources,
+        getResourcePath(resourceVerb),
+        (...args) => resourceClient(resourceVerb)[resourceVerb.verb](...args)
+      )
       return resources
     }, {})
 
