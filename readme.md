@@ -10,7 +10,7 @@ A Kubernetes API client for nodejs
 ## Install
 
 ```shell
-yarn install kube-client
+yarn add kube-client
 ```
 
 ## Configure
@@ -186,6 +186,7 @@ await kubernetes.configmaps.create({
 Start a `kubectl` proxy on a random port
 
 ```js
+const startProxy = require('kube-client/startProxy')
 const proxy = await startProxy()
 const kubernetes = await kubernetesClient(proxy.config)
 ```
@@ -195,11 +196,13 @@ const kubernetes = await kubernetesClient(proxy.config)
 Find configuration to access Kubernetes API from inside a container
 
 ```js
+const findConfig = require('kube-client/findConfig')
 const config = await findConfig()
 const kubernetes = await kubernetesClient(config)
 ```
 
 ```js
+const findConfigSync = require('kube-client/findConfigSync')
 const config = findConfigSync()
 const kubernetes = await kubernetesClient(config)
 ```
