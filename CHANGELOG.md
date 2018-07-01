@@ -1,3 +1,12 @@
+### 0.3.11 (crafted 07/01/18)
+
+Changes:
+
+  * (Mike Bannister) Remove handling of process exit in startProxy (#4)
+  * (Mike Bannister) Fix build
+  * (Mike Bannister) Improve readme
+  * (Mike Bannister) Decouple URL building from outer layer
+
 ### 0.3.10 (crafted 02/11/18)
 
 Changes:
