@@ -1,3 +1,9 @@
+### 0.3.12 (crafted 07/01/18)
+
+Changes:
+
+  * (Mike Bannister) No SIGHUP when killing proxy (#5)
+
 ### 0.3.11 (crafted 07/01/18)
 
 Changes:
