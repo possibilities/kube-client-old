@@ -1,4 +1,3 @@
-const exitHook = require('exit-hook')
 const { spawn } = require('child-process-promise')
 const { findAPortNotInUse } = require('portscanner')
 const { address: getIp } = require('ip')
@@ -9,7 +8,6 @@ const startProxy = async () => {
   const command = `kubectl proxy --port ${port} --accept-hosts .* --address ${ip}`
   const [cmd, ...args] = command.split(' ')
   const proxying = spawn(cmd, args)
-  exitHook(() => proxying.childProcess.kill('SIGHUP'))
 
   return new Promise(resolve => {
     let output = ''

@@ -189,6 +189,7 @@ Start a `kubectl` proxy on a random port
 const startProxy = require('kube-client/startProxy')
 const proxy = await startProxy()
 const kubernetes = await kubernetesClient(proxy.config)
+proxy.disconnect()
 ```
 
 #### `findConfig`/`findConfigSync`
