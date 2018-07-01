@@ -1,3 +1,9 @@
+### 0.3.13 (crafted 07/01/18)
+
+Changes:
+
+  * (Mike Bannister) Reintroduce exit hook (#6)
+
 ### 0.3.12 (crafted 07/01/18)
 
 Changes:
