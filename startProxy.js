@@ -17,7 +17,7 @@ const startProxy = async () => {
         resolve({
           disconnect: () => {
             proxying.catch(e => {})
-            proxying.childProcess.kill('SIGHUP')
+            proxying.childProcess.kill()
           },
           config: { baseUrl: `http://${ip}:${port}` }
         })
