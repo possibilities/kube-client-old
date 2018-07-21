@@ -17,7 +17,7 @@ const startProxy = async () => {
 
   exitHook(disconnect)
 
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     let output = ''
     proxying.childProcess.stdout.on('data', data => {
       output = `${output}${data.toString()}`
@@ -26,7 +26,32 @@ const startProxy = async () => {
         resolve({ disconnect, config })
       }
     })
+    proxying.catch(error => {
+      disconnect()
+      reject(error)
+    })
   })
 }
 
-module.exports = startProxy
+const maxTries = 1000
+const startProxyUntilPortResolves = async () => {
+  let index = 0
+  let proxy
+  while (!proxy) {
+    if (index >= maxTries) {
+      throw new Error('could not start kubectl proxy')
+    }
+
+    try {
+      proxy = await startProxy()
+    } catch (error) {
+      if (!error.message.includes(' failed with code 255')) {
+        throw error
+      }
+    }
+    index = index + 1
+  }
+  return proxy
+}
+
+module.exports = startProxyUntilPortResolves
