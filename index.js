@@ -23,13 +23,18 @@ const timeoutSeconds = oneDaySeconds
 const requestWithPromise =
   promisify(requestWithCallback.defaults({ json: true }))
 
-const request = (...args) =>
+const request = (options, ...args) =>
   new Promise((resolve, reject) => {
-    requestWithPromise(...args).then(({ body }) => {
-      if (body.code && body.code >= 400) {
-        reject(body)
+    return requestWithPromise(options, ...args).then(response => {
+      if (response.statusCode >= 500) {
+        return reject(new Error(`could not connect to kubernetes: ${options.baseUrl}`))
       }
-      resolve(body)
+
+      if (response.statusCode >= 400) {
+        return reject(response.body)
+      }
+
+      resolve(response.body)
     })
   })
 
