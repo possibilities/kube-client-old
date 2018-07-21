@@ -1,3 +1,10 @@
+### 0.3.14 (crafted 07/21/18)
+
+Changes:
+
+  * (Mike Bannister) Allow proxies to start simultaneously (#7)
+  * (Mike Bannister) Fix behavior when there's no connection (#8)
+
 ### 0.3.13 (crafted 07/01/18)
 
 Changes:
