@@ -19,6 +19,18 @@ const findConfig = async () => {
   const { stdout: configString } = await exec('kubectl config view -ojson --minify')
   const config = JSON.parse(configString)
   const baseUrl = config.clusters.pop().cluster.server
+  const { 'current-context': currentContext } = config
+
+  // TODO A bit brute, can probably find these values through ~/.kube/config
+  // more naturally
+  if (currentContext === 'minikube') {
+    return {
+      baseUrl,
+      cert: await readFile(`${process.env.HOME}/.minikube/apiserver.crt`),
+      key: await readFile(`${process.env.HOME}/.minikube/apiserver.key`),
+      ca: await readFile(`${process.env.HOME}/.minikube/ca.crt`)
+    }
+  }
 
   const { stdout: secretString } = await exec('kubectl get secret -ojson')
   const { items: secrets } = JSON.parse(secretString)
