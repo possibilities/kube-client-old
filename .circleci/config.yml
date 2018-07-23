@@ -57,7 +57,10 @@ jobs:
           name: Prepare config permissions
           command: |
             sudo chmod +r /home/circleci/.kube/config
+            sudo chmod +r /home/circleci/.minikube/ca.crt
             sudo chmod +r /home/circleci/.minikube/client.key
+            sudo chmod +r /home/circleci/.minikube/apiserver.crt
+            sudo chmod +r /home/circleci/.minikube/apiserver.key
       - run:
           name: Invoke test suite
           command: |
