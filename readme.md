@@ -192,18 +192,12 @@ const kubernetes = await kubernetesClient(proxy.config)
 proxy.disconnect()
 ```
 
-#### `findConfig`/`findConfigSync`
+#### `findConfig`
 
 Find configuration to access Kubernetes API from inside a container
 
 ```js
 const findConfig = require('kube-client/findConfig')
 const config = await findConfig()
-const kubernetes = await kubernetesClient(config)
-```
-
-```js
-const findConfigSync = require('kube-client/findConfigSync')
-const config = findConfigSync()
 const kubernetes = await kubernetesClient(config)
 ```
