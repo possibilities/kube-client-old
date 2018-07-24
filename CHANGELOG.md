@@ -1,3 +1,9 @@
+### 0.3.15 (crafted 07/23/18)
+
+Changes:
+
+  * (Mike Bannister) Teach `findConfig` to work outside of cluster (#9)
+
 ### 0.3.14 (crafted 07/21/18)
 
 Changes:
