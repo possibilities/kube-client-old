@@ -58,12 +58,17 @@ const findConfig = async () => {
   // Dynamic config based on current context
   return {
     baseUrl: cluster.server,
+    // Toggle this to false when trying to access an https and server is configured to skip
+    // authorization
     rejectUnauthorized: !(cluster['insecure-skip-tls-verify'] && cluster.server.startsWith('https')),
+    // Dredge up a key and cert based on the config
     key: await keyForUser(user),
     cert: await certForUser(user),
+    // Read CA from frile if applicable
     ca: cluster['certificate-authority']
       ? await readFile(cluster['certificate-authority'], 'utf8')
       : undefined,
+    // Non-CA requests need a bearer token
     headers: cluster['certificate-authority']
       ? undefined
       : { authorization: `Bearer ${token}` }
