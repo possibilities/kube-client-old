@@ -26,11 +26,11 @@ const findConfig = async () => {
   const currentContextName = config['current-context']
   const currentContext = config.contexts.find(context => context.name === currentContextName)
   const cluster = config.clusters.find(cluster => cluster.name === currentContext.context.cluster).cluster
-  const user = config.users.find(user => user.name === currentContext.context.user).user
 
   // TODO A bit brute, can probably find these values through ~/.kube/config
   // more naturally
   if (currentContextName === 'minikube') {
+    const user = config.users.find(user => user.name === currentContext.context.user).user
     return {
       baseUrl: cluster.server,
       cert: await readFile(user['client-certificate'], 'utf8'),
@@ -44,6 +44,7 @@ const findConfig = async () => {
   const defaultSecret = secrets.find(secret => secret.metadata.name.startsWith('default-token-'))
 
   if (currentContextName === 'docker-for-desktop') {
+    const user = config.users.find(user => user.name === currentContext.context.user).user
     return {
       baseUrl: cluster.server,
       rejectUnauthorized: false,
