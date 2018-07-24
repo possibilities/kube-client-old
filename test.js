@@ -2,9 +2,8 @@ const last = require('lodash/last')
 const { spy } = require('sinon')
 const test = require('ava')
 const kubernetesClient = require('.')
-const startProxy = require('./startProxy')
+const findConfig = require('./findConfig')
 
-let proxy
 let kubernetes
 
 const customResources = [{
@@ -25,14 +24,14 @@ const customResources = [{
 
 test.beforeEach(async t => {
   const namespace = 'test-foobar'
-  proxy = await startProxy()
+  const config = await findConfig()
 
   kubernetes = await kubernetesClient({
     namespace,
     customResources,
     ensureNamespace: true,
     aliases: { mapz: 'api.v1.configmaps' },
-    ...proxy.config
+    ...config
   })
 
   await kubernetes.api.v1.configmaps.deletecollection()
@@ -42,7 +41,6 @@ test.beforeEach(async t => {
 test.afterEach(async t => {
   await kubernetes.api.v1.configmaps.deletecollection()
   await new Promise(resolve => setTimeout(resolve, 1000))
-  proxy.disconnect()
 })
 
 test('gets', async t => {
