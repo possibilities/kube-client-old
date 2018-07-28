@@ -180,6 +180,37 @@ await kubernetes.configmaps.create({
 ```
 
 ### Helpers
+```
+
+#### `findConfig`
+
+Find configuration to access Kubernetes from inside or outside cluster. Uses `getKubectlConfig` or `getInClusterConfig` depending on the context (see below).
+
+```js
+const findConfig = require('kube-client/findConfig')
+const config = await findConfig()
+const kubernetes = await kubernetesClient(config)
+```
+
+#### `getInClusterConfig`
+
+Find configuration to access Kubernetes API from inside cluster
+
+```js
+const getInClusterConfig = require('kube-client/getInClusterConfig')
+const config = await getKubectlConfig()
+const kubernetes = await kubernetesClient(config)
+```
+
+#### `getKubectlConfig`
+
+Find configuration to access Kubernetes API from outside cluster using `kubectl` configuration (at `~/.kube/config`)
+
+```js
+const getKubectlConfig = require('kube-client/getKubectlConfig')
+const config = await getKubectlConfig()
+const kubernetes = await kubernetesClient(config)
+```
 
 #### `startProxy`
 
@@ -190,14 +221,3 @@ const startProxy = require('kube-client/startProxy')
 const proxy = await startProxy()
 const kubernetes = await kubernetesClient(proxy.config)
 proxy.disconnect()
-```
-
-#### `findConfig`
-
-Find configuration to access Kubernetes API from inside a container
-
-```js
-const findConfig = require('kube-client/findConfig')
-const config = await findConfig()
-const kubernetes = await kubernetesClient(config)
-```
