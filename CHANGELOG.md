@@ -1,3 +1,9 @@
+### 0.3.16 (crafted 07/28/18)
+
+Changes:
+
+  * (Mike Bannister) Avoid using kubectl by parsing config (#10)
+
 ### 0.3.15 (crafted 07/23/18)
 
 Changes:
