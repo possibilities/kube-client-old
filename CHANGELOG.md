@@ -1,3 +1,9 @@
+### 0.3.18 (crafted 08/20/18)
+
+Changes:
+
+  * (Mike Bannister) Fix https agent config (#12)
+
 ### 0.3.17 (crafted 08/20/18)
 
 Changes:
