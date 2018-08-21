@@ -1,3 +1,9 @@
+### 0.3.17 (crafted 08/20/18)
+
+Changes:
+
+  * (Mike Bannister) Move ca to correct location in request config (#11)
+
 ### 0.3.16 (crafted 07/28/18)
 
 Changes:
