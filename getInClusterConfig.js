@@ -12,8 +12,10 @@ const getInClusterConfig = async () => {
   if (host && port && await exists(caPath) && await exists(tokenPath)) {
     return {
       baseUrl: `https://${host}:${port}`,
-      ca: await readFile(caPath, 'utf8'),
-      headers: { authorization: `Bearer ${await readFile(tokenPath, 'utf8')}` }
+      headers: { authorization: `Bearer ${await readFile(tokenPath, 'utf8')}` },
+      agentOptions: {
+        ca: await readFile(caPath, 'utf8')
+      }
     }
   }
 }
